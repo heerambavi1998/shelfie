@@ -1,77 +1,144 @@
-# Shelfie — Your Personal Book Recommendation Engine
+<p align="center">
+  <img src="https://em-content.zobj.net/source/apple/391/books_1f4da.png" width="120" />
+</p>
 
-## Core Principle
+<h1 align="center">Shelfie</h1>
+<p align="center"><em>Your personal book recommendation engine that actually gets you.</em></p>
 
-**No local book catalog.** Books are ephemeral data fetched live from APIs. The only thing stored locally is *you* — your reading history, your reviews, your recommendation sessions. This keeps the system simple and the data always fresh.
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.11+-purple?style=flat-square&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/LLM-OpenAI-ff69b4?style=flat-square&logo=openai&logoColor=white" />
+  <img src="https://img.shields.io/badge/storage-local--only-blueviolet?style=flat-square" />
+  <img src="https://img.shields.io/badge/vibes-immaculate-hotpink?style=flat-square" />
+</p>
 
-## Quick Start
+---
+
+## 💡 The Idea
+
+Generic book recommendations suck. "People who bought X also bought Y" doesn't know that you just finished three heavy non-fiction books and desperately need a light, weird novel. Or that you want to go *deeper* into Japanese literature after falling in love with Murakami.
+
+**Shelfie knows.** It stores your reading history, embeds your reviews for semantic search, and uses an LLM to generate recommendations that feel *personally* right — based on your mood, your taste, and which direction you want to go.
+
+> 📚 No local book catalog. Books are fetched live from APIs.
+> The only thing stored locally is *you* — your reads, your reviews, your vibe.
+
+---
+
+## 🚀 Quick Start
 
 ```bash
-# Clone and install
-cd myreads
+# Install
 pip install -e .
 
 # Set up your API keys
 cp .env.example .env
-# Edit .env with your OPENAI_API_KEY (required) and GOOGLE_BOOKS_API_KEY (optional)
+# Edit .env with your OPENAI_API_KEY (required)
 
-# Log some reads
+# Start logging your reads ✨
 shelfie log "Sapiens"
 shelfie log "Project Hail Mary"
 
-# Get recommendations
+# Get recommendations that actually fit
 shelfie recommend --mood "something contemplative about mortality" --direction explore-new
-
-# Browse your history
-shelfie list
-shelfie recs
 ```
 
-## Version Roadmap
+---
 
-### V0 — Foundation (current)
+## ✏️ Commands
 
-Local CLI + TinyDB + ChromaDB + OpenAI. Log reads with ratings/reviews (embedded in ChromaDB for semantic retrieval), fetch book data live from APIs, get LLM-powered recommendations that understand your history, mood, and direction preference.
+| Command | What it does |
+|---|---|
+| `shelfie log "Book Name"` | 📖 Conversational flow — searches, confirms, asks for rating + review |
+| `shelfie list` | 📋 Show your reading history with stars and reviews |
+| `shelfie show <id>` | 🔍 Details on a specific read |
+| `shelfie search "query"` | 🌐 Live search Google Books / Open Library |
+| `shelfie recommend` | 🔮 Get 5 personalized recs based on history + mood |
+| `shelfie recs` | 📜 View past recommendation sessions |
 
-### V1 — Smarter Loop
+### 🎯 The `--direction` Flag
 
-- Recommendation feedback (mark recs as "read it", "not interested", "loved it") — feeds back into future prompts
-- Goodreads CSV import for bootstrapping reading history
-- Reading pattern analysis (auto-detect genres you're gravitating toward or away from)
-- Richer prompts with rolling context windows over embedded history
+This is the secret sauce:
 
-### V2 — Rich Context
+- **`explore-new`** — *"I've read enough sci-fi, surprise me"*
+- **`go-deeper`** — *"More like the last book I loved"*
+- **`balance`** — *A mix of comfort and discovery (default)*
 
-- Pull aggregated reviews from multiple sources to feed into recommendation prompts
-- Reading lists / shelves (e.g., "want to read", "favorites", "re-read")
-- Semantic search over your reading history ("that book about grief and resilience")
-- Optional TUI upgrade (using `textual`)
+### 🏷️ Match Types
 
-### V3 — Advanced Intelligence
+Each recommendation is labeled:
 
-- Reading statistics and insights dashboard
-- Export/sync capabilities
-- Multi-LLM provider support (Anthropic, local models via Ollama)
-- Conversational recommendation mode (back-and-forth refinement)
+- **safe bet** — closely matches your demonstrated taste
+- **stretch pick** — related but pushes your boundaries
+- **wild card** — a surprising left-field pick you'd never find on your own
 
-## Architecture
+---
+
+## 🏗️ How It Works
 
 ```
-CLI (typer) → Services → APIs (Google Books, Open Library, OpenAI)
-                ↓
-        Local Storage
-    ┌───────────┴───────────┐
-    TinyDB (JSON)       ChromaDB (vectors)
-    - reads               - review embeddings
-    - rec sessions        - semantic search
+                    ┌──────────────┐
+                    │  shelfie CLI │
+                    └──────┬───────┘
+                           │
+              ┌────────────┼────────────┐
+              ▼            ▼            ▼
+        ┌──────────┐ ┌──────────┐ ┌──────────┐
+        │  Read    │ │  Rec     │ │  Book    │
+        │  Service │ │  Engine  │ │  Lookup  │
+        └────┬─────┘ └────┬─────┘ └────┬─────┘
+             │            │            │
+     ┌───────┴───────┐    │    ┌───────┴────────┐
+     ▼               ▼    │    ▼                ▼
+ ┌────────┐   ┌─────────┐ │ ┌──────────┐ ┌───────────┐
+ │ TinyDB │   │ChromaDB │ │ │ Google   │ │ Open      │
+ │ (JSON) │   │(vectors)│ │ │ Books API│ │ Library   │
+ └────────┘   └─────────┘ │ └──────────┘ └───────────┘
+                           │
+                    ┌──────┴───────┐
+                    │   OpenAI     │
+                    │ (recs +      │
+                    │  embeddings) │
+                    └──────────────┘
 ```
 
-## Configuration
+**What's stored locally (just you):**
+- 📝 Your reads — title, author, ISBN, rating, review, dates
+- 🧠 Your review embeddings — for semantic "vibe matching"
+- 📜 Your recommendation sessions — mood, direction, results
 
-Copy `.env.example` to `.env` and fill in:
+**What's fetched live (never stored):**
+- 📖 Book metadata, descriptions, covers
+- ⭐ External ratings and reviews
+- 🔍 Search results
 
-- `OPENAI_API_KEY` — required for recommendations and review embeddings
-- `GOOGLE_BOOKS_API_KEY` — optional, unauthenticated access works but is rate-limited
-- `MYREADS_DATA_DIR` — where your data lives (default: `~/.myreads`)
-- `OPENAI_MODEL` — model for recommendations (default: `gpt-4o`)
-- `OPENAI_EMBEDDING_MODEL` — model for review embeddings (default: `text-embedding-3-small`)
+---
+
+## 🗺️ Roadmap
+
+| Version | Theme | Highlights |
+|---|---|---|
+| **V0** ✅ | Foundation | CLI, TinyDB + ChromaDB, OpenAI recs, semantic review matching |
+| **V1** 🔜 | Smarter Loop | Rec feedback, Goodreads import, reading pattern analysis |
+| **V2** | Rich Context | Multi-source reviews, shelves, semantic history search, TUI |
+| **V3** | Advanced | Stats dashboard, multi-LLM, conversational refinement |
+
+---
+
+## ⚙️ Configuration
+
+Copy `.env.example` to `.env`:
+
+```env
+OPENAI_API_KEY=sk-...              # 🔑 required
+GOOGLE_BOOKS_API_KEY=...           # 📚 optional (works without, just rate-limited)
+MYREADS_DATA_DIR=~/.myreads        # 📁 where your data lives
+OPENAI_MODEL=gpt-4o               # 🤖 model for recs
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small  # 🧬 model for review embeddings
+```
+
+---
+
+<p align="center">
+  <em>Built with 💜 for readers who want more than bestseller lists.</em>
+</p>
