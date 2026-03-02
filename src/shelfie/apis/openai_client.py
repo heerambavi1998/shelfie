@@ -48,7 +48,7 @@ def get_embedding(
     return get_embeddings([text], api_key=api_key, model=model)[0]
 
 
-def generate_recommendations(
+async def generate_recommendations(
     reading_history: str,
     semantic_context: str,
     mood: str,
@@ -77,5 +77,5 @@ Direction: {direction}
 
 Give me 5 book recommendations."""
 
-    result = agent.run_sync(user_prompt)
+    result = await agent.run(user_prompt)
     return result.output.recommendations

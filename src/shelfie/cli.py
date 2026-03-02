@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import date
 from typing import Annotated, Optional
 
@@ -210,12 +211,14 @@ def log(
 def list_reads(
     status: Annotated[Optional[ReadStatus], typer.Option("--status", "-s", help="Filter by status")] = None,
     min_rating: Annotated[Optional[int], typer.Option("--min-rating", help="Minimum rating filter", min=1, max=5)] = None,
+    year: Annotated[Optional[int], typer.Option("--year", "-y", help="Filter by year")] = None,
 ) -> None:
     """Show your reading history."""
     read_service, _ = _get_services()
     reads = read_service.list_reads(
         status=status.value if status else None,
         min_rating=min_rating,
+        year=year,
     )
 
     if not reads:
@@ -336,7 +339,7 @@ def recommend(
 
     with console.status("Thinking about what you should read next..."):
         try:
-            session = rec_engine.recommend(mood, direction_choice)
+            session = asyncio.run(rec_engine.recommend(mood, direction_choice))
         except ValueError as e:
             console.print(f"[red]{e}[/red]")
             raise typer.Exit(1)
@@ -389,6 +392,21 @@ def recs() -> None:
         for i, r in enumerate(session.recommendations, 1):
             match_label = _match_type_label(r.match_type)
             console.print(f"    [hot_pink]#{i}[/hot_pink]  {r.title} by {r.author}  {match_label}")
+
+
+# ── web ──────────────────────────────────────────────────────────────
+
+@app.command()
+def web(
+    port: Annotated[int, typer.Option("--port", "-p", help="Port to serve on")] = 8000,
+    host: Annotated[str, typer.Option("--host", help="Host to bind to")] = "127.0.0.1",
+) -> None:
+    """Launch the Shelfie web UI in your browser."""
+    import uvicorn
+
+    console.print(f"\n  [bold magenta]shelfie[/bold magenta] web UI starting at [underline]http://{host}:{port}[/underline]\n")
+
+    uvicorn.run("shelfie.web:app", host=host, port=port, log_level="info")
 
 
 if __name__ == "__main__":

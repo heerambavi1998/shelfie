@@ -36,6 +36,7 @@ class ReadService:
         self,
         status: str | None = None,
         min_rating: int | None = None,
+        year: int | None = None,
     ) -> list[Read]:
         docs = self._storage.get_all_reads()
         reads = [Read.from_doc(d) for d in docs]
@@ -44,6 +45,8 @@ class ReadService:
             reads = [r for r in reads if r.status.value == status]
         if min_rating is not None:
             reads = [r for r in reads if r.rating >= min_rating]
+        if year is not None:
+            reads = [r for r in reads if r.finished_at and r.finished_at.year == year]
 
         reads.sort(key=lambda r: r.created_at, reverse=True)
         return reads

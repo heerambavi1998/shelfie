@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shelfie</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 400: '#c084fc', 500: '#a855f7', 600: '#9333ea', 700: '#7e22ce' },
+            surface: { DEFAULT: '#1e1b2e', raised: '#282440', hover: '#322d4a' },
+            base: '#110f1f',
+          }
+        }
+      }
+    }
+  </script>
+  <link href="/static/style.css" rel="stylesheet" />
+</head>
+<body class="h-full bg-base text-gray-200 flex flex-col antialiased">
+
+  <!-- ── Header ──────────────────────────────────────────────── -->
+  <header class="border-b border-white/5 bg-base/90 backdrop-blur-md sticky top-0 z-30">
+    <div class="max-w-4xl mx-auto flex items-center justify-between px-5 h-16">
+      <div class="flex items-center gap-2.5">
+        <span class="text-2xl">📚</span>
+        <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-brand-400 to-pink-400 bg-clip-text text-transparent">shelfie</span>
+      </div>
+      <nav class="flex bg-surface rounded-full p-1 gap-0.5" id="tab-nav">
+        <button class="tab-btn active" data-tab="bookshelf">Bookshelf</button>
+        <button class="tab-btn" data-tab="log">Log</button>
+        <button class="tab-btn" data-tab="search">Search</button>
+        <button class="tab-btn" data-tab="recommend">Recommend</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Main ────────────────────────────────────────────────── -->
+  <main class="flex-1 overflow-y-auto">
+    <div class="max-w-4xl mx-auto px-5 py-8">
+
+      <!-- ══ Bookshelf ═══════════════════════════════════════════ -->
+      <section id="view-bookshelf" class="view">
+        <div class="flex flex-wrap items-center gap-3 mb-6">
+          <h2 class="text-2xl font-bold mr-auto">My Reads</h2>
+          <select id="filter-status" class="select-field">
+            <option value="">All statuses</option>
+            <option value="read">Read</option>
+            <option value="reading">Reading</option>
+            <option value="did-not-finish">Did not finish</option>
+          </select>
+          <select id="filter-rating" class="select-field">
+            <option value="">Any rating</option>
+            <option value="5">5 stars</option>
+            <option value="4">4+ stars</option>
+            <option value="3">3+ stars</option>
+          </select>
+        </div>
+        <div id="bookshelf-grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+        <div id="bookshelf-empty" class="hidden text-center py-20">
+          <p class="text-5xl mb-4">📖</p>
+          <p class="text-gray-400 text-lg">Your shelf is empty.</p>
+          <p class="text-gray-500 text-sm mt-1">Head over to <button class="text-brand-400 hover:underline font-medium" onclick="switchTab('log')">Log</button> to add your first book.</p>
+        </div>
+      </section>
+
+      <!-- ══ Log ═════════════════════════════════════════════════ -->
+      <section id="view-log" class="view hidden">
+        <h2 class="text-2xl font-bold mb-6">Log a Book</h2>
+
+        <!-- Step 1: search -->
+        <div id="log-step-search">
+          <label class="block text-sm font-medium text-gray-400 mb-2">Book name</label>
+          <div class="flex gap-3">
+            <div class="relative flex-1">
+              <input id="log-query" type="text" class="input-field w-full pr-11" placeholder="Say or type a book name..." autocomplete="off" />
+              <button id="log-mic" class="mic-btn" title="Use voice input">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m7 7v4m-4 0h8m-4-12a3 3 0 00-3 3v4a3 3 0 006 0v-4a3 3 0 00-3-3z"/></svg>
+              </button>
+            </div>
+            <button id="log-search-btn" class="btn-primary">Search</button>
+          </div>
+          <div id="log-results" class="mt-5 space-y-3"></div>
+        </div>
+
+        <!-- Step 2: details -->
+        <div id="log-step-details" class="hidden">
+          <div class="bg-surface rounded-xl p-5 mb-6 border border-white/5">
+            <p class="text-lg font-semibold text-white" id="log-chosen-title"></p>
+            <p class="text-sm text-gray-400 mt-0.5" id="log-chosen-author"></p>
+          </div>
+
+          <div class="grid gap-5 sm:grid-cols-2">
+            <div>
+              <label class="block text-sm font-medium text-gray-400 mb-2">Rating</label>
+              <div id="log-stars" class="flex gap-1.5 text-3xl cursor-pointer select-none">
+                <span data-star="1" class="star">&#9734;</span>
+                <span data-star="2" class="star">&#9734;</span>
+                <span data-star="3" class="star">&#9734;</span>
+                <span data-star="4" class="star">&#9734;</span>
+                <span data-star="5" class="star">&#9734;</span>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-400 mb-2">Status</label>
+              <select id="log-status" class="select-field w-full">
+                <option value="read">Read</option>
+                <option value="reading">Reading</option>
+                <option value="did-not-finish">Did not finish</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-5">
+            <label class="block text-sm font-medium text-gray-400 mb-2">Finished on</label>
+            <input id="log-date" type="date" class="input-field sm:w-52" />
+          </div>
+
+          <div class="mt-5">
+            <div class="flex items-center gap-2 mb-2">
+              <label class="text-sm font-medium text-gray-400">Review</label>
+              <button id="review-mic" class="mic-btn-inline" title="Dictate review">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m7 7v4m-4 0h8m-4-12a3 3 0 00-3 3v4a3 3 0 006 0v-4a3 3 0 00-3-3z"/></svg>
+              </button>
+            </div>
+            <textarea id="log-review" class="input-field w-full h-28 resize-none" placeholder="What did you think? (optional)"></textarea>
+          </div>
+
+          <div class="flex gap-3 mt-6">
+            <button id="log-back-btn" class="btn-secondary">Back</button>
+            <button id="log-save-btn" class="btn-primary">Save</button>
+          </div>
+        </div>
+
+        <!-- Step 3: confirmation -->
+        <div id="log-step-done" class="hidden text-center py-16">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 text-green-400 text-3xl mb-4">&#10003;</div>
+          <p class="text-xl font-semibold text-white" id="log-done-title"></p>
+          <p class="text-gray-400 mt-1" id="log-done-sub"></p>
+          <button id="log-another-btn" class="btn-primary mt-8">Log another</button>
+        </div>
+      </section>
+
+      <!-- ══ Search ══════════════════════════════════════════════ -->
+      <section id="view-search" class="view hidden">
+        <h2 class="text-2xl font-bold mb-6">Discover Books</h2>
+        <div class="flex gap-3 mb-6">
+          <div class="relative flex-1">
+            <input id="search-query" type="text" class="input-field w-full pr-11" placeholder="Title, author, or topic..." autocomplete="off" />
+            <button id="search-mic" class="mic-btn" title="Use voice input">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m7 7v4m-4 0h8m-4-12a3 3 0 00-3 3v4a3 3 0 006 0v-4a3 3 0 00-3-3z"/></svg>
+            </button>
+          </div>
+          <button id="search-btn" class="btn-primary">Search</button>
+        </div>
+        <div id="search-results" class="space-y-3"></div>
+      </section>
+
+      <!-- ══ Recommend ═══════════════════════════════════════════ -->
+      <section id="view-recommend" class="view hidden">
+        <h2 class="text-2xl font-bold mb-6">Get Recommendations</h2>
+
+        <div id="rec-form" class="max-w-xl">
+          <div class="mb-5">
+            <div class="flex items-center gap-2 mb-2">
+              <label class="text-sm font-medium text-gray-400">What are you in the mood for?</label>
+              <button id="mood-mic" class="mic-btn-inline" title="Use voice input">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m7 7v4m-4 0h8m-4-12a3 3 0 00-3 3v4a3 3 0 006 0v-4a3 3 0 00-3-3z"/></svg>
+              </button>
+            </div>
+            <textarea id="rec-mood" class="input-field w-full h-24 resize-none" placeholder="e.g. Something contemplative and beautifully written..."></textarea>
+          </div>
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-400 mb-2">Direction</label>
+            <div class="flex gap-2">
+              <label class="direction-chip"><input type="radio" name="direction" value="explore-new" class="sr-only peer" /><span class="chip-label">Explore new</span></label>
+              <label class="direction-chip"><input type="radio" name="direction" value="balance" class="sr-only peer" checked /><span class="chip-label">Balance</span></label>
+              <label class="direction-chip"><input type="radio" name="direction" value="go-deeper" class="sr-only peer" /><span class="chip-label">Go deeper</span></label>
+            </div>
+          </div>
+          <button id="rec-submit" class="btn-primary">Get recommendations</button>
+        </div>
+
+        <div id="rec-loading" class="hidden text-center py-16">
+          <div class="spinner mx-auto mb-4"></div>
+          <p class="text-gray-400">Thinking about what you should read next...</p>
+        </div>
+
+        <div id="rec-results" class="hidden mt-6 space-y-3"></div>
+
+        <!-- Past sessions -->
+        <div class="mt-12 border-t border-white/5 pt-8">
+          <h3 class="text-lg font-semibold mb-4">Past Sessions</h3>
+          <div id="rec-history" class="space-y-4"></div>
+          <p id="rec-history-empty" class="hidden text-gray-500 text-sm py-4">No past sessions yet.</p>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

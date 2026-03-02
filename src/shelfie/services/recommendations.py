@@ -18,7 +18,7 @@ class RecommendationEngine:
         self._storage = storage
         self._settings = settings
 
-    def recommend(self, mood: str, direction: Direction) -> RecommendationSession:
+    async def recommend(self, mood: str, direction: Direction) -> RecommendationSession:
         if not self._settings.openai_api_key:
             raise ValueError("OPENAI_API_KEY is required for recommendations.")
 
@@ -28,7 +28,7 @@ class RecommendationEngine:
 
         filtered_recs: list[BookRecommendation] = []
         for attempt in range(MAX_RETRIES + 1):
-            recs = openai_client.generate_recommendations(
+            recs = await openai_client.generate_recommendations(
                 reading_history=reading_history,
                 semantic_context=semantic_context,
                 mood=mood,
